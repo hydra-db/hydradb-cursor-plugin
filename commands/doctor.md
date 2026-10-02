@@ -28,4 +28,3 @@ If the user is specifically debugging prompt-time recall, point them to `/hydrad
 
 Do not infer that `UserPromptSubmit` hooks failed or that no HydraDB context was injected based on this output alone. It only reports configuration and tracked state; use `/hydradb:last-recall` for prompt-time recall evidence.
 
-This is the canonical command; `/hydradb:status` is a deprecated alias that still works.

@@ -58,7 +58,7 @@ node "${CURSOR_PLUGIN_ROOT}/scripts/plugin.mjs" doctor --json
 node "${CURSOR_PLUGIN_ROOT}/scripts/plugin.mjs" doctor
 ```
 
-9. If the user wants manual-only memory, set `captureMode` to `off` and point them to `/hydradb:remember` or `/hydradb:save-session`.
+9. If the user wants manual-only memory, set `captureMode` to `off` and point them to `/hydradb:ingest`.
 
 10. If the user wants whole-session upsert behavior, set `captureMode` to `session-upsert`. If they want both isolated turns and rolling session memories, set it to `both`.
 

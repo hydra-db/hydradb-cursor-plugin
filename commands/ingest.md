@@ -20,4 +20,3 @@ If the user asks why specific files were skipped, explain it from the JSON outpu
 
 Also mention whether files were ingested as memory or knowledge, since that depends on `ingestionMode`.
 
-This is the canonical command; `/hydradb:sync-workspace`, `/hydradb:reindex`, `/hydradb:remember`, and `/hydradb:save-session` are deprecated aliases that still work.
