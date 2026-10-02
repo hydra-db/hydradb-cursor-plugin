@@ -1,0 +1,22 @@
+{
+  "name": "hydradb",
+  "displayName": "HydraDB",
+  "version": "1.1.0",
+  "description": "Secure HydraDB automation for Cursor with workspace sync, prompt recall, and conversation capture.",
+  "author": {
+    "name": "HydraDB",
+    "email": "support@hydradb.com",
+    "url": "https://hydradb.com"
+  },
+  "homepage": "https://docs.hydradb.com/",
+  "repository": "https://github.com/hydra-db/hydradb-cursor",
+  "license": "Apache-2.0",
+  "keywords": [
+    "hydradb",
+    "memory",
+    "retrieval",
+    "cursor",
+    "knowledge-base"
+  ],
+  "logo": "assets/icon.png"
+}

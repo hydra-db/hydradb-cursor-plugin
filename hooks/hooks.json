@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "hooks": {
+    "sessionStart": [
+      {
+        "command": "./scripts/run-plugin.sh session-start"
+      },
+      {
+        "command": "./scripts/run-plugin.sh session-sync-hook"
+      }
+    ],
+    "afterFileEdit": [
+      {
+        "command": "./scripts/run-plugin.sh post-tool-use"
+      }
+    ],
+    "stop": [
+      {
+        "command": "./scripts/run-plugin.sh stop"
+      }
+    ]
+  }
+}

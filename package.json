@@ -1,0 +1,51 @@
+{
+  "name": "hydradb-cursor-plugin",
+  "version": "1.1.0",
+  "description": "Secure HydraDB automation for Claude Code with workspace sync, prompt recall, and conversation capture.",
+  "author": "HydraDB <support@hydradb.com>",
+  "license": "Apache-2.0",
+  "homepage": "https://docs.hydradb.com/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/usecortex/hydradb-claude-code.git"
+  },
+  "bugs": {
+    "url": "https://github.com/usecortex/hydradb-claude-code/issues"
+  },
+  "keywords": [
+    "hydradb",
+    "memory",
+    "retrieval",
+    "claude-code",
+    "knowledge-base"
+  ],
+  "type": "module",
+  "files": [
+    ".cursor-plugin",
+    "commands",
+    "skills",
+    "hooks",
+    "scripts",
+    "assets",
+    "hydradb-api-info",
+    "config.example.json",
+    ".hydradb-plugin.json.example",
+    "README.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "check": "node scripts/check.mjs",
+    "build:vendor": "node scripts/build-vendor.mjs",
+    "pack:dry-run": "npm pack --dry-run"
+  },
+  "devDependencies": {
+    "@hydradb/sdk": "2.1.2",
+    "esbuild": "0.28.1"
+  }
+}
