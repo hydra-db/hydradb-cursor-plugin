@@ -7,31 +7,6 @@ It recalls relevant notes when you send a prompt, syncs your markdown docs into
 HydraDB, and saves conversations as durable memories - the same behavior as the
 HydraDB Claude Code plugin, on the same underlying engine (`scripts/plugin.mjs`).
 
-## What's Cursor-specific here
-
-- **Manifest:** `.cursor-plugin/plugin.json` (plus `.cursor-plugin/marketplace.json`).
-- **Commands:** the user-typed slash commands live in `commands/*.md`. The
-  model-invoked skills (`auto-recall`, `hydradb-context`) stay in `skills/`.
-- **Hooks:** `hooks/hooks.json` (with `"version": 1`) uses Cursor's event names and
-  relative paths:
-  - `sessionStart` → inject status + sync docs (`session-start`, `session-sync-hook`)
-  - `afterFileEdit` → incremental sync (`post-tool-use`)
-  - `stop` → save the conversation (`stop`)
-- **Hook output shape:** Cursor reads a flat `{ "additional_context": "..." }`, not
-  Claude/Codex's nested `hookSpecificOutput`. The runner sets `HYDRADB_HOOK_FORMAT=cursor`
-  so the shared engine emits the right shape.
-
-Everything else (`scripts/`, config, API docs) is shared as-is.
-
-## What differs from Claude/Codex (verified against Cursor's hooks docs)
-
-- **No per-prompt auto-recall.** Cursor's `beforeSubmitPrompt` hook can only allow/block
-  a prompt - it cannot inject text. Only `sessionStart` and `postToolUse` can inject
-  context. So recall on Cursor happens at session start (initial context) and via the
-  manual `/hydradb query` command; there is no per-message auto-recall like Claude/Codex.
-- Capture (`stop`) and doc sync (`sessionStart`, `afterFileEdit`) work the same.
-- Plugin-root variable: scripts use `CURSOR_PLUGIN_ROOT` (Cursor's convention).
-
 ## Prerequisites
 
 - Node.js >= 18 and npm
