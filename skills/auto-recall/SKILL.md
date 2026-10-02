@@ -1,6 +1,6 @@
 ---
 name: auto-recall
-description: Retrieve relevant HydraDB context when answering would benefit from prior conversations, workspace docs, project decisions, team conventions, or user preferences not fully present in the current chat. Use proactively for substantive project questions or when continuity may matter.
+description: Retrieve relevant HydraDB context (past chats, workspace docs, decisions) before answering substantive questions.
 allowed-tools: Bash(node *)
 user-invocable: false
 ---

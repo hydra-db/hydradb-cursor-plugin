@@ -1,6 +1,6 @@
 ---
 name: setup
-description: Configure the HydraDB Claude Code plugin for the current workspace. Use when the user wants to enable HydraDB memory, fix configuration, or create a workspace config file.
+description: Configure the HydraDB Cursor plugin for this workspace. Use to enable memory, fix config, or create a config file.
 ---
 
 Configure the HydraDB plugin for the current workspace.

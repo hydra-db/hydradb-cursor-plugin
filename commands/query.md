@@ -1,6 +1,6 @@
 ---
 name: query
-description: Query HydraDB using the configured search mode. Use when the user explicitly wants to inspect what HydraDB knows - memories, workspace knowledge, or both.
+description: Query HydraDB in the configured search mode. Use to inspect what HydraDB knows: memories, workspace knowledge, or both.
 ---
 
 Run bounded retrieval for the provided query:

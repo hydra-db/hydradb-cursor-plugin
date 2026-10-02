@@ -1,6 +1,6 @@
 ---
 name: ingest
-description: Ingest the current workspace's markdown-first context files into HydraDB. Use when the user wants an immediate sync or refresh of workspace knowledge instead of waiting for automatic sync.
+description: Ingest the workspace's markdown context into HydraDB now. Use for an immediate sync instead of waiting for auto-sync.
 ---
 
 Ingest the current workspace context files into HydraDB:

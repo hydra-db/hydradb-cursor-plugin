@@ -1,6 +1,6 @@
 ---
 name: doctor
-description: Inspect HydraDB plugin configuration, active settings, and sync state for the current workspace. Use when the user asks if HydraDB is working or why sync or recall is not happening.
+description: Inspect HydraDB plugin config, settings, and sync state. Use when asked if HydraDB works or why recall or sync fails.
 ---
 
 Check HydraDB plugin health for the current workspace:

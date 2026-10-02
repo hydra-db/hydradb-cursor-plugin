@@ -1,6 +1,6 @@
 ---
 name: last-recall
-description: Show the most recent auto-recall payload captured by the HydraDB plugin. Use when debugging whether UserPromptSubmit recall ran, what HydraDB returned, or what was injected into context.
+description: Show the most recent auto-recall payload. Use to debug whether recall ran, what HydraDB returned, or what was injected.
 ---
 
 Inspect the last auto-recall payload recorded by the plugin:

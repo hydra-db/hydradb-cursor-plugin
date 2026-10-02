@@ -1,6 +1,6 @@
 ---
 name: hydradb-context
-description: Background guidance for sessions where HydraDB context is injected. Use when <hydradb-context> blocks appear or when the user asks how the HydraDB plugin behaves.
+description: Guidance for sessions with injected HydraDB context. Use when <hydradb-context> blocks appear or the user asks about it.
 user-invocable: false
 ---
 
