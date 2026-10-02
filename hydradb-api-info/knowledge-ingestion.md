@@ -8,172 +8,167 @@
 
 ### Examples
 
-<Tabs>
-  <Tab title="API Request">
-    ```bash  theme={null}
-    # File Upload Example
-    curl -X POST https://api.hydradb.com/ingestion/upload_knowledge \
-    -F "tenant_id=tenant_123" \
-    -F "files=@a.pdf" \
-    -F "files=@b.pdf" \
-    -F 'file_metadata=[
+#### API Request
+```bash
+# File Upload Example
+curl -X POST https://api.hydradb.com/ingestion/upload_knowledge \
+-F "tenant_id=tenant_123" \
+-F "files=@a.pdf" \
+-F "files=@b.pdf" \
+-F 'file_metadata=[
+{
+  "id": "doc_a",
+  "metadata": { "dept": "sales" },
+  "additional_metadata": { "author": "Alice" },
+  "relations": {"hydradb_source_ids": ["source_id_1", "source_id_2"]}
+},
+{
+  "id": "doc_b",
+  "metadata": { "dept": "marketing" },
+  "additional_metadata": { "author": "Bob" },
+  "relations": {"hydradb_source_ids": []}
+}
+]'
+
+# App Knowledge Upload Example
+curl -X POST https://api.hydradb.com/ingestion/upload_knowledge \
+-H 'Content-Type: application/json' \
+-d '{
+  "app_knowledge": [
     {
       "id": "doc_a",
-      "metadata": { "dept": "sales" },
-      "additional_metadata": { "author": "Alice" },
+      "tenant_id": "tenant_123",
+      "sub_tenant_id": "sub_tenant_456",
+      "title": "Sales Report Q1",
+      "source": "gmail",
+      "description": "Quarterly sales performance report",
+      "url": "https://mail.google.com/view/abc123",
+      "timestamp": "2024-01-15T10:30:00Z",
+      "content": {
+        "text": "Sales data for Q1 2024 shows a 15% increase..."
+      },
+      "metadata": {
+        "dept": "sales"
+      },
+      "additional_metadata": {
+        "author": "Alice",
+        "priority": "high"
+      },
       "relations": {"hydradb_source_ids": ["source_id_1", "source_id_2"]}
+    }
+  ]
+}'
+```
+
+#### TypeScript
+```ts
+// File Upload Example
+import fs from 'fs';
+
+const uploadResult = await client.upload.knowledge({
+  files: [
+    fs.readFileSync("a.pdf"),
+    fs.readFileSync("b.pdf")
+  ],
+  tenant_id: "tenant_123",
+  file_metadata: [
+    {
+      id: "doc_a",
+      metadata: { dept: "sales" },
+      additional_metadata: { author: "Alice" },
+      relations: {"hydradb_source_ids": ["source_id_1", "source_id_2"]}
     },
     {
-      "id": "doc_b",
-      "metadata": { "dept": "marketing" },
-      "additional_metadata": { "author": "Bob" },
-      "relations": {"hydradb_source_ids": []}
+      id: "doc_b",
+      metadata: { dept: "marketing" },
+      additional_metadata: { author: "Bob" },
+      relations: {"hydradb_source_ids": ["source_id_3", "source_id_4"]}
     }
-    ]'
+  ]
+});
 
-    # App Knowledge Upload Example
-    curl -X POST https://api.hydradb.com/ingestion/upload_knowledge \
-    -H 'Content-Type: application/json' \
-    -d '{
-      "app_knowledge": [
-        {
-          "id": "doc_a",
-          "tenant_id": "tenant_123",
-          "sub_tenant_id": "sub_tenant_456",
-          "title": "Sales Report Q1",
-          "source": "gmail",
-          "description": "Quarterly sales performance report",
-          "url": "https://mail.google.com/view/abc123",
-          "timestamp": "2024-01-15T10:30:00Z",
-          "content": {
-            "text": "Sales data for Q1 2024 shows a 15% increase..."
-          },
-          "metadata": {
-            "dept": "sales"
-          },
-          "additional_metadata": {
-            "author": "Alice",
-            "priority": "high"
-          },
-          "relations": {"hydradb_source_ids": ["source_id_1", "source_id_2"]}
-        }
-      ]
-    }'
-    ```
-  </Tab>
-
-  <Tab title="TypeScript">
-    ```ts  theme={null}
-    // File Upload Example
-    import fs from 'fs';
-
-    const uploadResult = await client.upload.knowledge({
-      files: [
-        fs.readFileSync("a.pdf"),
-        fs.readFileSync("b.pdf")
-      ],
+// App Knowledge Upload Example
+const appUploadResult = await client.upload.knowledge({
+  app_knowledge: [
+    {
+      id: "doc_a",
       tenant_id: "tenant_123",
-      file_metadata: [
-        {
-          id: "doc_a",
-          metadata: { dept: "sales" },
-          additional_metadata: { author: "Alice" },
-          relations: {"hydradb_source_ids": ["source_id_1", "source_id_2"]}
-        },
-        {
-          id: "doc_b",
-          metadata: { dept: "marketing" },
-          additional_metadata: { author: "Bob" },
-          relations: {"hydradb_source_ids": ["source_id_3", "source_id_4"]}
-        }
-      ]
-    });
+      sub_tenant_id: "sub_tenant_456",
+      title: "Sales Report Q1",
+      source: "gmail",
+      description: "Quarterly sales performance report",
+      url: "https://mail.google.com/view/abc123",
+      timestamp: "2024-01-15T10:30:00Z",
+      content: { 
+        text: "Sales data for Q1 2024 shows a 15% increase..."
+      },
+      metadata: { dept: "sales" },
+      additional_metadata: { 
+        author: "Alice",
+        priority: "high"
+      },
+      relations: {"hydradb_source_ids": ["source_id_1", "source_id_2"]}
+    }
+  ]
+});
+```
 
-    // App Knowledge Upload Example
-    const appUploadResult = await client.upload.knowledge({
-      app_knowledge: [
-        {
-          id: "doc_a",
-          tenant_id: "tenant_123",
-          sub_tenant_id: "sub_tenant_456",
-          title: "Sales Report Q1",
-          source: "gmail",
-          description: "Quarterly sales performance report",
-          url: "https://mail.google.com/view/abc123",
-          timestamp: "2024-01-15T10:30:00Z",
-          content: { 
-            text: "Sales data for Q1 2024 shows a 15% increase..."
-          },
-          metadata: { dept: "sales" },
-          additional_metadata: { 
-            author: "Alice",
-            priority: "high"
-          },
-          relations: {"hydradb_source_ids": ["source_id_1", "source_id_2"]}
-        }
-      ]
-    });
-    ```
-  </Tab>
-
-  <Tab title="Python (Sync)">
-    ```python  theme={null}
-    # File Upload Example
-    # Async usage is similar, just use async_client and await
-    with open("a.pdf", 'rb') as f1, open("b.pdf", 'rb') as f2:
-        files = [
-            ("a.pdf", f1),
-            ("b.pdf", f2)
-        ]
-        upload_result = client.upload.knowledge(
-            tenant_id="tenant_123",
-            files=files,
-            file_metadata=[
-                {
-                    "id": "doc_a",
-                    "metadata": {"dept": "sales"},
-                    "additional_metadata": {"author": "Alice"},
-                    "relations": {"hydradb_source_ids": ["source_id_1", "source_id_2"]}
-                },
-                {
-                    "id": "doc_b",
-                    "metadata": {"dept": "marketing"},
-                    "additional_metadata": {"author": "Bob"},
-                    "relations": {"hydradb_source_ids": ["source_id_3", "source_id_4"]}
-                }
-            ]
-        )
-
-    # App Knowledge Upload Example
-    # Async usage is similar, just use async_client and await
-    app_upload_result = client.upload.knowledge(
-        app_knowledge=[
+#### Python (Sync)
+```python
+# File Upload Example
+# Async usage is similar, just use async_client and await
+with open("a.pdf", 'rb') as f1, open("b.pdf", 'rb') as f2:
+    files = [
+        ("a.pdf", f1),
+        ("b.pdf", f2)
+    ]
+    upload_result = client.upload.knowledge(
+        tenant_id="tenant_123",
+        files=files,
+        file_metadata=[
             {
                 "id": "doc_a",
-                "tenant_id": "tenant_123",
-                "sub_tenant_id": "sub_tenant_456",
-                "title": "Sales Report Q1",
-                "source": "gmail",
-                "description": "Quarterly sales performance report",
-                "url": "https://mail.google.com/view/abc123",
-                "timestamp": "2024-01-15T10:30:00Z",
-                "content": {
-                    "text": "Sales data for Q1 2024 shows a 15% increase..."
-                },
-                "metadata": {
-                    "dept": "sales"
-                },
-                "additional_metadata": {
-                    "author": "Alice",
-                    "priority": "high"
-                },
-                "relations": {"hydradb_source_ids": []}
+                "metadata": {"dept": "sales"},
+                "additional_metadata": {"author": "Alice"},
+                "relations": {"hydradb_source_ids": ["source_id_1", "source_id_2"]}
+            },
+            {
+                "id": "doc_b",
+                "metadata": {"dept": "marketing"},
+                "additional_metadata": {"author": "Bob"},
+                "relations": {"hydradb_source_ids": ["source_id_3", "source_id_4"]}
             }
         ]
     )
-    ```
-  </Tab>
-</Tabs>
+
+# App Knowledge Upload Example
+# Async usage is similar, just use async_client and await
+app_upload_result = client.upload.knowledge(
+    app_knowledge=[
+        {
+            "id": "doc_a",
+            "tenant_id": "tenant_123",
+            "sub_tenant_id": "sub_tenant_456",
+            "title": "Sales Report Q1",
+            "source": "gmail",
+            "description": "Quarterly sales performance report",
+            "url": "https://mail.google.com/view/abc123",
+            "timestamp": "2024-01-15T10:30:00Z",
+            "content": {
+                "text": "Sales data for Q1 2024 shows a 15% increase..."
+            },
+            "metadata": {
+                "dept": "sales"
+            },
+            "additional_metadata": {
+                "author": "Alice",
+                "priority": "high"
+            },
+            "relations": {"hydradb_source_ids": []}
+        }
+    ]
+)
+```
 
 This endpoint supports two types of uploads:
 
@@ -190,7 +185,7 @@ The `file_metadata` parameter accepts a JSON array where each object corresponds
 
 **Structure:**
 
-```json  theme={null}
+```json
 [
   {
     "id": "string",
@@ -215,13 +210,13 @@ The `file_metadata` parameter accepts a JSON array where each object corresponds
 * **Use Case**: Store department information, project tags, organizational units, or any tenant-scoped attributes that help organize and filter documents.
 * **Example**:
 
-  ```json  theme={null}
-  {
-    "dept": "sales",
-    "project": "Q4_2024",
-    "region": "us-west"
-  }
-  ```
+```json
+{
+  "dept": "sales",
+  "project": "Q4_2024",
+  "region": "us-west"
+}
+```
 
 #### `additional_metadata` (object, optional)
 
@@ -229,14 +224,14 @@ The `file_metadata` parameter accepts a JSON array where each object corresponds
 * **Use Case**: Store document-specific information like author, creation date, document type, version, or any attributes that describe the individual document.
 * **Example**:
 
-  ```json  theme={null}
-  {
-    "author": "Alice",
-    "created_date": "2024-01-15",
-    "document_type": "invoice",
-    "version": "1.0"
-  }
-  ```
+```json
+{
+  "author": "Alice",
+  "created_date": "2024-01-15",
+  "document_type": "invoice",
+  "version": "1.0"
+}
+```
 
 #### `relations` (object, optional)
 
@@ -247,9 +242,7 @@ The `file_metadata` parameter accepts a JSON array where each object corresponds
   * `{"hydradb_source_ids": ["source_id_1", "source_id_2"]}`: Create relations to sources with those IDs
   * `{"hydradb_source_ids": []}`: No relations
 
-<Info>
-  **Metadata Ordering**: The order of objects in the `file_metadata` array should match the order of files in the `files` parameter. The first metadata object applies to the first file, the second to the second file, and so on.
-</Info>
+> **Metadata Ordering**: The order of objects in the `file_metadata` array should match the order of files in the `files` parameter. The first metadata object applies to the first file, the second to the second file, and so on.
 
 ## AppKnowledgeModel Parameters
 
@@ -257,7 +250,7 @@ The `app_knowledge` parameter accepts an array of `AppKnowledgeModel` objects. E
 
 ### `app_knowledge` Array Structure
 
-```json  theme={null}
+```json
 [
   {
     "id": "string",
@@ -336,13 +329,13 @@ The `app_knowledge` parameter accepts an array of `AppKnowledgeModel` objects. E
 * **Use Case**: Store tenant-wide attributes like department, project, region, etc.
 * **Example**:
 
-  ```json  theme={null}
-  {
-    "dept": "sales",
-    "project": "Q4_2024",
-    "region": "us-west"
-  }
-  ```
+```json
+{
+  "dept": "sales",
+  "project": "Q4_2024",
+  "region": "us-west"
+}
+```
 
 #### `additional_metadata` (dict, optional, default: {})
 
@@ -350,13 +343,13 @@ The `app_knowledge` parameter accepts an array of `AppKnowledgeModel` objects. E
 * **Use Case**: Store source-specific information like author, priority, tags, etc.
 * **Example**:
 
-  ```json  theme={null}
-  {
-    "author": "Alice",
-    "priority": "high",
-    "tags": ["urgent", "review"]
-  }
-  ```
+```json
+{
+  "author": "Alice",
+  "priority": "high",
+  "tags": ["urgent", "review"]
+}
+```
 
 #### `relations` (object, optional, default: {`{"hydradb_source_ids": []}`})
 
@@ -367,39 +360,27 @@ The `app_knowledge` parameter accepts an array of `AppKnowledgeModel` objects. E
   * `{"hydradb_source_ids": ["source_id_1", "source_id_2"]}`: Create relations to sources with those IDs
   * `{"hydradb_source_ids": []}`: No relations
 
-<Info>
-  **Content Model**: The `content` field in AppKnowledgeModel supports multiple formats including text, HTML (base64), CSV (base64), markdown, file attachments, and structured layouts. Choose the format that best represents your knowledge source content.
-</Info>
+> **Content Model**: The `content` field in AppKnowledgeModel supports multiple formats including text, HTML (base64), CSV (base64), markdown, file attachments, and structured layouts. Choose the format that best represents your knowledge source content.
 
 ## Supported Content Types
 
 ### File Uploads
 
-<Info>
-  **Supported Upload Formats**: For a comprehensive list of all supported file formats with detailed information, see our [Supported File Formats](/essentials/file-formats) documentation.
-</Info>
+> **Supported Upload Formats**: For a comprehensive list of all supported file formats with detailed information, see our [Supported File Formats](/essentials/file-formats) documentation.
 
-<Warning>
-  **Unsupported File Formats**: If you attempt to upload a file format that is not supported, you will receive an error response with status code `400` and the message: `"Unsupported file format: [filename]"`. Ensure your files are in a supported format before uploading.
-</Warning>
+> **Unsupported File Formats**: If you attempt to upload a file format that is not supported, you will receive an error response with status code `400` and the message: `"Unsupported file format: [filename]"`. Ensure your files are in a supported format before uploading.
 
 ### App Knowledge Sources
 
-<Info>
-  **Supported Apps**: The app\_knowledge format supports knowledge from various workplace apps including Gmail, Slack, Notion, Drive, Jira, Confluence, and more. Each app type is processed using specialized pipelines to extract and normalize content effectively.
-</Info>
+> **Supported Apps**: The app\_knowledge format supports knowledge from various workplace apps including Gmail, Slack, Notion, Drive, Jira, Confluence, and more. Each app type is processed using specialized pipelines to extract and normalize content effectively.
 
-<Warning>
-  **Required Fields**: The `tenant_id` and `sub_tenant_id` fields are required for all app knowledge sources. Ensure these are provided for each item in the `app_knowledge` array.
-</Warning>
+> **Required Fields**: The `tenant_id` and `sub_tenant_id` fields are required for all app knowledge sources. Ensure these are provided for each item in the `app_knowledge` array.
 
 ## Document Processing Pipeline
 
 When you upload content to HydraDB, it is securely accepted and queued for processing, then automatically extracted, parsed, and cleaned to normalize structure and text. The content is intelligently chunked into semantically meaningful units with preserved metadata, enriched with embeddings for semantic understanding, indexed for hybrid retrieval (metadata, keyword, and vector search), and linked via cross-references to build relational context. Throughout the pipeline, quality checks validate extraction and embedding fidelity, ensuring the content is fully indexed, connected into the context graph, and ready for accurate, low-latency recall by your agents.
 
-<Note>
-  **Processing Time**: Most documents are fully processed and searchable within 1-5 minutes. Larger documents (100+ pages) may take up to 15 minutes. You can check processing status using the document ID returned in the response.
-</Note>
+> **Processing Time**: Most documents are fully processed and searchable within 1-5 minutes. Larger documents (100+ pages) may take up to 15 minutes. You can check processing status using the document ID returned in the response.
 
 ### `Upsert` parameter (optional)
 
@@ -420,7 +401,7 @@ After uploading, you can monitor your document's processing status:
 
 **For File Uploads:**
 
-```json  theme={null}
+```json
 {
   "filename": "file_abc.pdf",
   "id": "doc_123456",
@@ -430,7 +411,7 @@ After uploading, you can monitor your document's processing status:
 
 **For App Knowledge Uploads:**
 
-```json  theme={null}
+```json
 {
   "processed": 2,
   "failed": 0,
@@ -448,9 +429,7 @@ Your content will progress through these states:
 * **`success`**: Content is fully processed and searchable
 * **`errored`**: Processing encountered an error (rare occurrence)
 
-<Info>
-  **In-Progress Details**: While the status shows `in_progress`, the system is actually performing multiple steps: app-specific content extraction, intelligent chunking, embedding generation, and database indexing. These happen sequentially but are all part of the single `in_progress` state.
-</Info>
+> **In-Progress Details**: While the status shows `in_progress`, the system is actually performing multiple steps: app-specific content extraction, intelligent chunking, embedding generation, and database indexing. These happen sequentially but are all part of the single `in_progress` state.
 
 ## Best Practices
 
@@ -514,251 +493,4 @@ Your content will progress through these states:
 * Verify your API key has sufficient permissions
 * Ensure required fields (`tenant_id`, `sub_tenant_id`) are provided\`
 
-<Info>
-  **Need Help?** If content fails to process or you're experiencing issues, contact our support team with the `id` for assistance.
-</Info>
-
-
-## OpenAPI
-
-````yaml POST /ingestion/upload_knowledge
-openapi: 3.1.0
-info:
-  title: HydraDB API
-  description: REST APIs for the HydraDB retrieval engine
-  version: 0.0.1
-servers:
-  - url: https://api.hydradb.com
-    description: Production
-    x-fern-server-name: hydradb-prod
-security: []
-paths:
-  /ingestion/upload_knowledge:
-    post:
-      tags:
-        - ingestion
-      summary: Upload Knowledge
-      operationId: upload_knowledge_ingestion_upload_knowledge_post
-      requestBody:
-        content:
-          multipart/form-data:
-            schema:
-              $ref: >-
-                #/components/schemas/Body_upload_knowledge_ingestion_upload_knowledge_post
-        required: true
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SourceUploadResponse'
-        '400':
-          description: Bad Request - Invalid input parameters
-          content:
-            application/json:
-              schema:
-                $ref: >-
-                  #/components/schemas/cortex__models__response__commons__ActualErrorResponse
-        '401':
-          description: Unauthorized - Authentication required
-          content:
-            application/json:
-              schema:
-                $ref: >-
-                  #/components/schemas/cortex__models__response__commons__ActualErrorResponse
-        '403':
-          description: Forbidden - Access denied
-          content:
-            application/json:
-              schema:
-                $ref: >-
-                  #/components/schemas/cortex__models__response__commons__ActualErrorResponse
-        '404':
-          description: Not Found - Resource does not exist
-          content:
-            application/json:
-              schema:
-                $ref: >-
-                  #/components/schemas/cortex__models__response__commons__ActualErrorResponse
-        '422':
-          description: Unprocessable Entity - Validation failed
-          content:
-            application/json:
-              schema:
-                $ref: >-
-                  #/components/schemas/cortex__models__response__commons__ActualErrorResponse
-        '500':
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: >-
-                  #/components/schemas/cortex__models__response__commons__ActualErrorResponse
-        '503':
-          description: Service Unavailable
-          content:
-            application/json:
-              schema:
-                $ref: >-
-                  #/components/schemas/cortex__models__response__commons__ActualErrorResponse
-      security:
-        - HTTPBearer: []
-components:
-  schemas:
-    Body_upload_knowledge_ingestion_upload_knowledge_post:
-      properties:
-        tenant_id:
-          type: string
-          title: Tenant Id
-          description: Unique identifier for the tenant/organization
-          example: tenant_1234
-        sub_tenant_id:
-          type: string
-          title: Sub Tenant Id
-          description: >-
-            Optional sub-tenant identifier used to organize data within a
-            tenant. If omitted, the default sub-tenant created during tenant
-            setup will be used.
-          default: ''
-          example: sub_tenant_4567
-        upsert:
-          type: boolean
-          title: Upsert
-          description: If true, update existing sources with the same id.
-          default: true
-          example: true
-        files:
-          items:
-            type: string
-            format: binary
-          type: array
-          title: Files
-          description: >-
-            Files to upload (documents). Omit or leave empty when only sending
-            app_sources.
-          default: []
-        file_metadata:
-          anyOf:
-            - type: string
-            - type: 'null'
-          title: File Metadata
-          description: >-
-            JSON array of file metadata objects; length must match files when
-            provided. Each object may include: file_id (optional), metadata,
-            additional_metadata, and relations (forceful relations to other
-            HydraDB source IDs).
-        app_sources:
-          anyOf:
-            - type: string
-            - type: 'null'
-          title: App Sources
-          description: >-
-            JSON: single source object or array of app-generated sources to
-            index. Omit when only uploading files.
-      type: object
-      required:
-        - tenant_id
-      title: Body_upload_knowledge_ingestion_upload_knowledge_post
-    SourceUploadResponse:
-      properties:
-        success:
-          type: boolean
-          title: Success
-          default: true
-          example: true
-        message:
-          type: string
-          title: Message
-          default: Upload initiated successfully
-        results:
-          items:
-            $ref: '#/components/schemas/SourceUploadResultItem'
-          type: array
-          title: Results
-          description: List of upload results for each source.
-          example: []
-        success_count:
-          type: integer
-          title: Success Count
-          description: Number of sources successfully queued.
-          default: 0
-          example: 1
-        failed_count:
-          type: integer
-          title: Failed Count
-          description: Number of sources that failed to upload.
-          default: 0
-          example: 1
-      type: object
-      title: SourceUploadResponse
-    cortex__models__response__commons__ActualErrorResponse:
-      properties:
-        detail:
-          $ref: >-
-            #/components/schemas/cortex__models__response__commons__ErrorResponse
-      type: object
-      required:
-        - detail
-      title: ActualErrorResponse
-    SourceUploadResultItem:
-      properties:
-        source_id:
-          type: string
-          title: Source Id
-          description: Unique identifier for the uploaded source.
-          example: <source_id>
-        filename:
-          anyOf:
-            - type: string
-            - type: 'null'
-          title: Filename
-          description: Original filename if present.
-        status:
-          $ref: '#/components/schemas/SourceStatus'
-          description: Initial processing status.
-          default: queued
-        error:
-          anyOf:
-            - type: string
-            - type: 'null'
-          title: Error
-          description: Error message if upload failed.
-      type: object
-      required:
-        - source_id
-      title: SourceUploadResultItem
-    cortex__models__response__commons__ErrorResponse:
-      properties:
-        success:
-          type: boolean
-          title: Success
-          default: false
-          example: true
-        message:
-          type: string
-          title: Message
-          default: Error occurred
-        error_code:
-          anyOf:
-            - type: string
-            - type: 'null'
-          title: Error Code
-      type: object
-      title: ErrorResponse
-    SourceStatus:
-      type: string
-      enum:
-        - queued
-        - processing
-        - completed
-        - failed
-      title: SourceStatus
-  securitySchemes:
-    HTTPBearer:
-      type: http
-      scheme: bearer
-
-````
-
-Built with [Mintlify](https://mintlify.com).
+> **Need Help?** If content fails to process or you're experiencing issues, contact our support team with the `id` for assistance.
