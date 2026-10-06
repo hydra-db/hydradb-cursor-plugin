@@ -52,7 +52,7 @@ printf "\n%s\n" "── Configuration ──"
 if [ ! -f config.json ]; then
   cp config.example.json config.json
   info "Created config.json from config.example.json"
-  warn "Edit config.json and set your HYDRADB_API_KEY and HYDRADB_TENANT_ID."
+  warn "Edit config.json and set your HYDRADB_API_KEY and HYDRADB_DATABASE."
 else
   info "config.json already exists - skipping"
 fi
@@ -73,7 +73,7 @@ printf "\n%s\n" "── Next steps ──"
 echo ""
 echo "  1. Set your HydraDB credentials:"
 echo "       export HYDRADB_API_KEY=\"your-api-key\""
-echo "       export HYDRADB_TENANT_ID=\"your-tenant-id\""
+echo "       export HYDRADB_DATABASE=\"your-tenant-id\""
 echo ""
 echo "  2. Or edit config.json directly with your values."
 echo ""

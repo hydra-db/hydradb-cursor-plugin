@@ -345,7 +345,7 @@ async function handleSessionStart() {
   if (!configResult.configured) {
     lines.push("HydraDB plugin is installed but not configured.");
     lines.push(
-      `Set HYDRADB_API_KEY and HYDRADB_TENANT_ID, or add one of ${PROJECT_CONFIG_FILES.join(
+      `Set HYDRADB_API_KEY and HYDRADB_DATABASE, or add one of ${PROJECT_CONFIG_FILES.join(
         ", "
       )} to the workspace.`
     );

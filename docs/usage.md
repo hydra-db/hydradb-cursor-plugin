@@ -30,8 +30,8 @@ At minimum, provide:
 
 ```bash
 export HYDRADB_API_KEY="..."
-export HYDRADB_TENANT_ID="tenant_123"
-export HYDRADB_SUB_TENANT_ID=""
+export HYDRADB_DATABASE="tenant_123"
+export HYDRADB_COLLECTION=""
 ```
 
 Then add a workspace config if you want repo-specific behavior:

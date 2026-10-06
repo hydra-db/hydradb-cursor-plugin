@@ -25,7 +25,7 @@ node "${CURSOR_PLUGIN_ROOT}/scripts/plugin.mjs" doctor --json
 {
   "apiBaseUrl": "https://api.hydradb.com",
   "apiKey": "${HYDRADB_API_KEY}",
-  "tenantId": "${HYDRADB_TENANT_ID}",
+  "tenantId": "${HYDRADB_DATABASE}",
   "subTenantId": "",
   "autoRecall": true,
   "autoIngest": true,
@@ -43,8 +43,8 @@ node "${CURSOR_PLUGIN_ROOT}/scripts/plugin.mjs" doctor --json
 
 5. Never invent secrets. Prefer environment variables for secret values:
    - `HYDRADB_API_KEY`
-   - `HYDRADB_TENANT_ID`
-   - `HYDRADB_SUB_TENANT_ID` (set it explicitly; `""` is valid if you want HydraDB's default sub-tenant)
+   - `HYDRADB_DATABASE`
+   - `HYDRADB_COLLECTION` (set it explicitly; `""` is valid if you want HydraDB's default sub-tenant)
    - optional `HYDRADB_BASE_URL`
    - optional `HYDRADB_USER_NAME`
 

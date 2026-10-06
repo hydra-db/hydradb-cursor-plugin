@@ -18,7 +18,7 @@ HydraDB Claude Code plugin, on the same underlying engine (`scripts/plugin.mjs`)
 ```bash
 make bootstrap
 export HYDRADB_API_KEY="your-api-key"
-export HYDRADB_TENANT_ID="your-tenant-id"
+export HYDRADB_DATABASE="your-tenant-id"
 ```
 
 Install via Cursor's plugin/marketplace flow pointing at this repo. Validate the
