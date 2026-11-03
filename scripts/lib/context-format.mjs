@@ -87,13 +87,22 @@ function relationsForChunk(result, chunk) {
 // closed by `---`. This adds the MEMORY/KNOWLEDGE label the plugin needs to keep
 // two result sets apart, plus redaction and truncation the reference omits.
 export function buildContextString(label, result) {
-  // Hybrid: prefer the server-rendered llm_prompt when the recall returned one,
-  // otherwise fall back to the client-side build below.
-  if (result?.llmPrompt) {
-    return `=== ${label} ===\n${result.llmPrompt}`.trim();
-  }
-
   const lines = [];
+
+  // Put warnings and table data ahead of prose so a long server prompt cannot
+  // hide them. Bound each extension independently as well as the whole block.
+  for (const [title, value] of [["WARNINGS", result?.warnings], ["TABLE DATA", result?.tabularData]]) {
+    if (value == null || (Array.isArray(value) && !value.length)) continue;
+    const rendered = JSON.stringify(value);
+    const limit = 700;
+    lines.push(`=== ${label} ${title} ===`);
+    lines.push(rendered.length > limit ? `${rendered.slice(0, limit)} [additional data omitted]` : rendered);
+    lines.push("");
+  }
+  if (result?.llmPrompt) {
+    lines.push(`=== ${label} ===`, result.llmPrompt);
+    return lines.join("\n").trim();
+  }
 
   const paths = Array.isArray(result.graphContext?.queryPathsDetailed)
     ? result.graphContext.queryPathsDetailed
@@ -159,7 +168,7 @@ export function buildContextString(label, result) {
 export function buildHydraContextBlock({ query, memory, knowledge, errors, maxContextChars }) {
   const sections = [];
 
-  if (memory?.chunks?.length || memory?.queryPaths?.length || memory?.graphContext?.queryPathsDetailed?.length) {
+  if (memory?.chunks?.length || memory?.queryPaths?.length || memory?.graphContext?.queryPathsDetailed?.length || memory?.tabularData != null || memory?.warnings?.length || memory?.llmPrompt) {
     const section = buildContextString("MEMORY", memory);
     if (section) {
       sections.push(section);
@@ -169,7 +178,8 @@ export function buildHydraContextBlock({ query, memory, knowledge, errors, maxCo
   if (
     knowledge?.chunks?.length ||
     knowledge?.queryPaths?.length ||
-    knowledge?.graphContext?.queryPathsDetailed?.length
+    knowledge?.graphContext?.queryPathsDetailed?.length ||
+    knowledge?.tabularData != null || knowledge?.warnings?.length || knowledge?.llmPrompt
   ) {
     const section = buildContextString("KNOWLEDGE", knowledge);
     if (section) {
@@ -198,7 +208,11 @@ export function buildHydraContextBlock({ query, memory, knowledge, errors, maxCo
     256,
     (maxContextChars || 7000) - lines.join("\n").length - footer.length - 2
   );
-  lines.push(truncateText(sections.join("\n\n"), maxBodyChars));
+  const body = sections.join("\n\n");
+  const omission = " [additional context omitted]";
+  lines.push(body.length > maxBodyChars
+    ? body.slice(0, Math.max(0, maxBodyChars - omission.length)) + omission
+    : body);
   lines.push(footer);
   return lines.join("\n");
 }
