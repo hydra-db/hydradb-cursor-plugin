@@ -26,6 +26,7 @@
     "skills",
     "hooks",
     "scripts",
+    "tests/openapi-query.test.mjs",
     "assets",
     "hydradb-api-info",
     "config.example.json",
@@ -40,7 +41,7 @@
     "node": ">=18"
   },
   "scripts": {
-    "check": "node scripts/check.mjs",
+    "check": "node scripts/check-runner.mjs && node --test tests/openapi-query.test.mjs",
     "build:vendor": "node scripts/build-vendor.mjs",
     "pack:dry-run": "npm pack --dry-run"
   },
