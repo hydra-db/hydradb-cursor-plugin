@@ -275,8 +275,14 @@ export async function runHttpTests() {
     const mixedClient = {
       tenantId: "db_test",
       subTenantId: "col_test",
-      addMemories: async () => {},
-      uploadKnowledge: async () => {},
+      addMemories: async (batch) => ({
+        acceptedIds: (batch || []).map((item) => item.source_id).filter(Boolean),
+        failedIds: []
+      }),
+      uploadKnowledge: async (batch) => ({
+        acceptedIds: (batch || []).map((item) => item.id).filter(Boolean),
+        failedIds: []
+      }),
       deleteMemories: async () => ({ deletedIds: [], failedIds: [] }),
       // Confirms only DROP.md; KEEP.md is reported failed.
       deleteKnowledge: async (ids) => ({
