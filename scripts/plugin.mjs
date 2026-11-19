@@ -188,7 +188,8 @@ async function getRuntime() {
         tenantId: configResult.config.tenantId,
         subTenantId: configResult.config.subTenantId,
         requestTimeoutMs: configResult.config.requestTimeoutMs,
-        writeTimeoutMs: configResult.config.writeTimeoutMs
+        writeTimeoutMs: configResult.config.writeTimeoutMs,
+        layout: configResult.config.layout
       })
     : null;
 
@@ -252,6 +253,17 @@ function sessionMemorySourceId(sessionId) {
 }
 
 async function performRecall(client, config, query) {
+  if (config.layout === "unified") {
+    const settled = await Promise.allSettled([client.recallKnowledge(query, {
+      maxResults: config.maxMemoryResults + config.maxKnowledgeResults,
+      mode: config.recallMode,
+      graphContext: config.graphContext
+    })]);
+    const empty = { chunks: [], queryPaths: [], graphContext: {}, additionalContext: {} };
+    const result = settled[0].status === "fulfilled" ? settled[0].value : empty;
+    return { searchMode: "unified", ...(result.layout === "unified" ? { unified: result } : {}), memory: empty,
+      knowledge: result.layout === "unified" ? empty : result, errors: combineRecallErrors(settled) };
+  }
   const tasks = [];
 
   if (config.searchMode === "memory" || config.searchMode === "both") {
@@ -472,6 +484,7 @@ async function handleUserPromptSubmit() {
 
   const additionalContext = buildHydraContextBlock({
     query: prompt,
+    unified: recall.unified,
     memory: recall.memory,
     knowledge: recall.knowledge,
     errors: recall.errors,
@@ -492,6 +505,7 @@ async function handleUserPromptSubmit() {
       recall.knowledge.graphContext?.queryPathsDetailed?.length || recall.knowledge.queryPaths.length,
     errors: recall.errors,
     additionalContext,
+    ...(recall.unified ? { unified: recall.unified } : {}),
     updatedAt: now
   };
   if (configResult.config.debug) {
@@ -815,6 +829,7 @@ async function handleSaveSession(args) {
 }
 
 function renderRecallText(result) {
+  if (result.unified?.llmPrompt != null) return result.unified.llmPrompt;
   const lines = [];
 
   if (result.searchMode === "memory" || result.searchMode === "both") {

@@ -47,8 +47,8 @@ export function truncateText(text, maxLength) {
   return `${normalized.slice(0, Math.max(0, maxLength - 3)).trimEnd()}...`;
 }
 
-export function redactSecrets(text) {
-  let redacted = normalizeText(text);
+export function redactSecrets(text, { preserveFormatting = false } = {}) {
+  let redacted = preserveFormatting ? String(text ?? "") : normalizeText(text);
 
   for (const secret of registeredSecrets) {
     redacted = redacted.split(secret).join("[REDACTED:credential]");

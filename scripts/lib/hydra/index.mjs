@@ -12,6 +12,7 @@
 
 import { HydraDBClient, HydraDBError, HydraDBTimeoutError } from "../../vendor/hydradb-sdk.mjs";
 import { redactSecrets, registerSecret } from "../sanitize.mjs";
+import { isUnifiedResponse, unifiedBatches, validateLayout } from "../unified.mjs";
 
 const DEFAULT_API_BASE = "https://api.hydradb.com";
 const DEFAULT_REQUEST_TIMEOUT_MS = 15000;
@@ -97,6 +98,13 @@ function unwrapAndNormalize(value) {
     value && typeof value === "object" && "data" in value && ("success" in value || "meta" in value)
       ? value.data
       : value;
+  if (isUnifiedResponse(data)) {
+    return { ...data, chunks: data.chunks.map(chunk => {
+      if (!chunk || !("chunkMetadata" in chunk)) return chunk;
+      const { chunkMetadata, ...rest } = chunk;
+      return { ...rest, chunk_metadata: chunkMetadata };
+    }) };
+  }
   return snakeCaseKeys(data);
 }
 
@@ -208,10 +216,12 @@ export function createHydraWrapper({
   baseUrl = DEFAULT_API_BASE,
   requestTimeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
   writeTimeoutMs = DEFAULT_WRITE_TIMEOUT_MS,
+  layout = "split",
   // Injectable for conformance/HTTP tests; production builds the real client.
   sdkClient,
   fetch: fetchImpl
 } = {}) {
+  validateLayout(layout);
   registerSecret(apiKey);
   const database = tenantId || "";
   const collection = subTenantId ?? "";
@@ -258,13 +268,34 @@ export function createHydraWrapper({
     return scope;
   }
 
+  function jsonIngestClient(payload) {
+    const serialized = JSON.stringify(payload);
+    if (Buffer.byteLength(serialized) > 16 * 1024 * 1024) throw new HydraWrapperError("unified ingest body exceeds 16 MiB; split the request");
+    const transport = fetchImpl ?? globalThis.fetch;
+    return new HydraDBClient({
+      token: apiKey,
+      baseUrl: baseUrl.replace(/\/+$/g, ""),
+      maxRetries: MAX_RETRIES,
+      fetch: (url, init) => {
+        if (new URL(url).pathname !== new URL(`${baseUrl.replace(/\/+$/g, "")}/context/ingest`).pathname || init?.method !== "POST") {
+          throw new Error("Cannot bridge unified ingest: unexpected SDK request");
+        }
+        const headers = new Headers(init.headers);
+        headers.delete("content-type");
+        headers.delete("content-length");
+        headers.set("Content-Type", "application/json");
+        return transport(url, { ...init, headers, body: serialized });
+      }
+    });
+  }
+
   const context = {
     async query(args = {}, opts = {}) {
       const timeoutMs = opts.timeoutMs ?? requestTimeoutMs;
       const request = {
         ...contextScope(),
         query: args.query,
-        ...(args.kind ? { type: args.kind } : {}),
+        ...(args.kind && layout === "split" ? { type: args.kind } : {}),
         ...(args.operator ? { operator: args.operator } : {}),
         ...(args.mode ? { mode: args.mode } : {}),
         ...(args.maxResults != null ? { maxResults: args.maxResults } : {}),
@@ -316,6 +347,26 @@ export function createHydraWrapper({
 
     async ingest(args = {}, opts = {}) {
       const timeoutMs = opts.timeoutMs ?? writeTimeoutMs;
+      if (layout === "unified") {
+        if (Object.keys(args).some(key => !["context", "upsert", "enrich", "instructions"].includes(key))) {
+          throw new HydraWrapperError("unified ingest accepts canonical context items, not split fields");
+        }
+        const batches = unifiedBatches(args.context);
+        if (batches.length !== 1) throw new HydraWrapperError("unified ingest exceeds one request; split the request");
+        const payload = { ...contextScope(), context: batches[0] };
+        for (const key of ["upsert", "enrich"]) {
+          if (args[key] != null) {
+            if (typeof args[key] !== "boolean") throw new HydraWrapperError(`${key} must be boolean`);
+            payload[key] = args[key];
+          }
+        }
+        if (args.instructions != null) {
+          if (typeof args.instructions !== "string" || [...args.instructions.trim()].length > 4000) throw new HydraWrapperError("instructions must be a string of at most 4000 characters");
+          payload.instructions = args.instructions;
+        }
+        const ingestClient = jsonIngestClient(payload);
+        return unwrapAndNormalize(await call("/context/ingest", timeoutMs, () => ingestClient.context.ingest(contextScope(), requestOptions(timeoutMs))));
+      }
       // Ingest carries a top-level tenant_id (one of the DX-G-002 defects) and
       // the SAME canonical `collection` that delete uses, so an ingest and a
       // later delete resolve to the identical scope (the server filters delete
@@ -340,7 +391,7 @@ export function createHydraWrapper({
 
     async list(args = {}, opts = {}) {
       const timeoutMs = opts.timeoutMs ?? requestTimeoutMs;
-      const request = { ...contextScope(), ...(args.kind ? { type: args.kind } : {}) };
+      const request = { ...contextScope(), ...(args.kind && layout === "split" ? { type: args.kind } : {}) };
       return unwrapAndNormalize(
         await call("/context/list", timeoutMs, () => client.context.list(request, requestOptions(timeoutMs)))
       );
@@ -384,7 +435,7 @@ export function createHydraWrapper({
       const request = {
         ...contextScope(),
         ids: args.ids,
-        ...(args.kind ? { type: args.kind } : {})
+        ...(args.kind && layout === "split" ? { type: args.kind } : {})
       };
       const envelope = await call("/context (delete)", timeoutMs, () =>
         client.context.delete(request, requestOptions(timeoutMs))
