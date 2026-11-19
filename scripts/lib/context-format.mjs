@@ -165,7 +165,9 @@ export function buildContextString(label, result) {
   return lines.join("\n").trim();
 }
 
-export function buildHydraContextBlock({ query, memory, knowledge, errors, maxContextChars }) {
+export function buildHydraContextBlock({ query, unified, memory, knowledge, errors, maxContextChars }) {
+  const unifiedResult = unified ?? (memory?.layout === "unified" ? memory : knowledge?.layout === "unified" ? knowledge : null);
+  if (unifiedResult && typeof unifiedResult.llmPrompt === "string") return unifiedResult.llmPrompt;
   const sections = [];
 
   if (memory?.chunks?.length || memory?.queryPaths?.length || memory?.graphContext?.queryPathsDetailed?.length || memory?.tabularData != null || memory?.warnings?.length || memory?.llmPrompt) {

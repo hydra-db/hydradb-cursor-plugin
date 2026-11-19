@@ -1,3 +1,7 @@
 # Query table options and SDK compatibility
 
+Unified rollout preparation uses the same SDK-owned per-call transport seam to replace the ingest multipart body with validated, bounded JSON. The SDK retains authentication, API-Version, abort/timeouts, retries (disabled), error translation, and response parsing. Real vendored-SDK tests cover the wire contract; generated/vendor files and the exact 2.1.2 pin are unchanged. A typed unified SDK release is still required before removing this adapter. The source API/site publication lint failure is a separate blocker, not permission to bypass publication gates.
+
+Unified is not enabled in production. Keep `layout: "split"` (the default). Only use `layout: "unified"` or `HYDRADB_LAYOUT=unified` after the rollout has been confirmed for your database. Reads accept either response shape; writes never switch formats after a failure. Unified text items over 1 MiB are rejected before dispatch instead of truncating content or changing stable context IDs; split oversized workspace content explicitly before retrying.
+
 The published SDK 2.1.2 strips `include_table_sql` and `table_limit` while serializing query requests. The wrapper bridges these fields into the SDK-serialized JSON using a per-call transport adapter. SDK authentication, timeout/abort, retries and response/error handling remain in use. The bridge is limited to bounded JSON query bodies and should be removed after a compatible SDK is released and vendored. No unpublished SDK is bundled.

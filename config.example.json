@@ -8,6 +8,7 @@
   "autoIngest": true,
   "captureMode": "session-upsert",
   "searchMode": "memory",
+  "layout": "split",
   "ingestionMode": "memory",
   "recallMode": "thinking",
   "graphContext": true,

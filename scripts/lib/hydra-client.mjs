@@ -1,5 +1,6 @@
 import { createHydraWrapper, classifyIngestion } from "./hydra/index.mjs";
 import { redactSecrets, unwrapAppKnowledgeEnvelope } from "./sanitize.mjs";
+import { isUnifiedResponse, normalizeUnifiedResponse, memoryToContext, knowledgeToContext, unifiedBatches, validateLayout } from "./unified.mjs";
 
 const DEFAULT_API_BASE = "https://api.hydradb.com";
 const DEFAULT_REQUEST_TIMEOUT_MS = 15000;
@@ -144,15 +145,15 @@ function isCredentialKey(key) {
 }
 
 // Preserve structured response extensions without bypassing secret redaction.
-function redactStructured(value) {
-  if (typeof value === "string") return redactSecrets(value);
-  if (Array.isArray(value)) return value.map(redactStructured);
+function redactStructured(value, preserveFormatting = false) {
+  if (typeof value === "string") return redactSecrets(value, { preserveFormatting });
+  if (Array.isArray(value)) return value.map(entry => redactStructured(entry, preserveFormatting));
   if (value && typeof value === "object") return Object.fromEntries(
     Object.entries(value).map(([key, entry]) => [
       key,
       isCredentialKey(key)
         ? "[REDACTED]"
-        : redactStructured(entry)
+        : redactStructured(entry, preserveFormatting)
     ])
   );
   return value;
@@ -363,6 +364,7 @@ function extractDetailedQueryPaths(response) {
 // the check/golden fixtures are authored snake_case. The polymorphic normalizer
 // is otherwise kept verbatim - it still tolerates the many v1 field spellings.
 export function normalizeRetrievalResponse(response) {
+  if (isUnifiedResponse(response)) return normalizeUnifiedResponse(redactStructured(response, true));
   const rawChunks = response?.chunks || response?.results || response?.context || [];
   const chunks = Array.isArray(rawChunks)
     ? rawChunks
@@ -431,11 +433,13 @@ export class HydraClient {
     baseUrl = DEFAULT_API_BASE,
     requestTimeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
     writeTimeoutMs = DEFAULT_WRITE_TIMEOUT_MS,
+    layout = "split",
     // Test seams only (never set in production): inject a capturing fetch or a
     // spy SDK client so wire-level tests need no network. Forwarded verbatim.
     fetch: fetchImpl,
     sdkClient
   } = {}) {
+    this.layout = validateLayout(layout);
     // Kept as public fields: plugin code duck-types tenantId/subTenantId
     // (workspace-sync.mjs) and other call sites read them directly.
     this.tenantId = tenantId;
@@ -450,6 +454,7 @@ export class HydraClient {
       baseUrl,
       requestTimeoutMs,
       writeTimeoutMs,
+      layout,
       ...(fetchImpl ? { fetch: fetchImpl } : {}),
       ...(sdkClient ? { sdkClient } : {})
     });
@@ -494,6 +499,7 @@ export class HydraClient {
   }
 
   async addMemories(memories, options = {}) {
+    if (this.layout === "unified") return this.ingestUnified(memories.map(memoryToContext), options);
     // Reconcile the per-item outcome against each source_id so a partially
     // failed batch is not recorded as fully stored.
     const requestedIds = (memories || []).map((item) => item.source_id).filter(Boolean);
@@ -510,7 +516,7 @@ export class HydraClient {
 
   async addTextMemory(text, options = {}) {
     const infer = options.infer ?? true;
-    return this.addMemories(
+    const result = await this.addMemories(
       [
         {
           text,
@@ -525,10 +531,12 @@ export class HydraClient {
       ],
       { upsert: options.upsert ?? true }
     );
+    if (this.layout === "unified" && (result.failedIds.length || result.data.success === false || result.data.failed_count > 0)) throw new Error(`unified note ingest was not fully accepted: ${result.data.errors?.join("; ") || "per-item refusal"}; retry the note`);
+    return result;
   }
 
   async addConversationMemory(userText, assistantText, options = {}) {
-    return this.addMemories(
+    const result = await this.addMemories(
       [
         {
           user_assistant_pairs: [
@@ -546,9 +554,43 @@ export class HydraClient {
       ],
       { upsert: options.upsert ?? true }
     );
+    if (this.layout === "unified" && (result.failedIds.length || result.data.success === false || result.data.failed_count > 0)) throw new Error(`unified conversation ingest was not fully accepted: ${result.data.errors?.join("; ") || "per-item refusal"}; retry the turn`);
+    return result;
+  }
+
+  async ingestUnified(items, options = {}) {
+    const requestedIds = items.map(item => item.context_id).filter(Boolean);
+    const data = { success: true, results: [], failed_count: 0, errors: [] };
+    for (const context of unifiedBatches(items)) {
+      try {
+        const part = await this._hydra.context.ingest({ context, upsert: options.upsert ?? true }, { timeoutMs: options.timeoutMs ?? this.writeTimeoutMs });
+        data.success &&= part?.success !== false;
+        data.failed_count += Number(part?.failed_count ?? 0);
+        const results = Array.isArray(part?.results) ? part.results : [];
+        data.results.push(...results);
+        if (results.length < context.length || results.some(item => item?.status !== "queued" || item.id == null || item.error || item.error_code)) data.success = false;
+      } catch (error) {
+        data.success = false;
+        data.failed_count += context.length;
+        data.errors.push(error.message);
+      }
+    }
+    const accepted = new Set(data.results.filter(item => item?.id != null && item.status === "queued" && !item.error && !item.error_code).map(item => String(item.id)));
+    return {
+      acceptedIds: requestedIds.filter(id => accepted.has(String(id))),
+      failedIds: requestedIds.filter(id => !accepted.has(String(id))),
+      data
+    };
   }
 
   async uploadKnowledge(appKnowledge) {
+    if (this.layout === "unified") {
+      for (const record of appKnowledge) {
+        if (record?.tenant_id != null && record.tenant_id !== this.tenantId) throw new Error("knowledge tenant_id conflicts with configured database");
+        if (record?.sub_tenant_id != null && record.sub_tenant_id !== (this.subTenantId ?? "")) throw new Error("knowledge sub_tenant_id conflicts with configured collection");
+      }
+      return this.ingestUnified(appKnowledge.map(knowledgeToContext));
+    }
     // DX-G-002 fix: knowledge ingests via the SDK's multipart context.ingest,
     // carrying the structured items in `appKnowledge` (a JSON string). That is
     // multipart with a top-level tenant_id and preserves each item's
