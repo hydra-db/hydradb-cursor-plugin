@@ -404,6 +404,8 @@ export function normalizeRetrievalResponse(response) {
 
   return {
     chunks,
+    ...(response?.graph != null ? { graph: redactStructured(response.graph) } : {}),
+    ...(response?.forceful_relations != null ? { forcefulRelations: redactStructured(response.forceful_relations) } : {}),
     ...(response?.tabular_data != null ? { tabularData: redactStructured(response.tabular_data) } : {}),
     ...(response?.temporal_facts != null ? { temporalFacts: redactStructured(response.temporal_facts) } : {}),
     ...(response?.warnings != null ? { warnings: redactStructured(response.warnings) } : {}),
